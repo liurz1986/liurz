@@ -61,4 +61,7 @@ public class LoginController {
 	  public void test(){
 		  
 	  }
+	   public void test1(){
+		  System.out.println("ddddd");
+	  }
 	}
