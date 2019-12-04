@@ -57,8 +57,4 @@ public class LoginController {
 		    }
        return false;
       }
-	  
-	  public void test(){
-		  
-	  }
 	}
