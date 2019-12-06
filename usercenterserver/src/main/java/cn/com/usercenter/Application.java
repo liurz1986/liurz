@@ -22,11 +22,8 @@ public class Application extends SpringBootServletInitializer {
 		Map<String, String> params = new HashMap<String, String>();
 		params.put("data", "welcome to you");
 		params.put("status", "success");
-<<<<<<< HEAD
 		params.put（"key","values"）;
-=======
         params.put("status1", "success");
->>>>>>> xx
 		return params;
 	}
 
