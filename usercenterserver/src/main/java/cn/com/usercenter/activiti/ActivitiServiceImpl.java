@@ -349,8 +349,12 @@ public class ActivitiServiceImpl implements ActivitiService {
 	public void main() {
 
 	}
-	public void test（）{
+
+	public void test() {
 		System.out.println("ddsafs");
+		Integer d = 1;
+		Integer h = d * 300;
+		System.out.println(h);
 		String name = "dfadfadsf";
 		System.out.println(name);
 	}
