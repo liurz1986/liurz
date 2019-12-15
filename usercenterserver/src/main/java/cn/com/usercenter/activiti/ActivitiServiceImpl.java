@@ -351,4 +351,7 @@ public class ActivitiServiceImpl implements ActivitiService {
 	    }
 	  }
 	}
+	public void test（）{
+		System.out.println("ddsafs");
+	}
 }
