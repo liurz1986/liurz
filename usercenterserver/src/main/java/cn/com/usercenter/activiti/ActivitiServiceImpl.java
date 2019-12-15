@@ -7,22 +7,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import org.activiti.engine.HistoryService;
-import org.activiti.engine.IdentityService;
-import org.activiti.engine.RepositoryService;
-import org.activiti.engine.RuntimeService;
-import org.activiti.engine.TaskService;
-import org.activiti.engine.history.HistoricProcessInstance;
-import org.activiti.engine.history.HistoricVariableInstance;
-import org.activiti.engine.impl.persistence.entity.HistoricProcessInstanceEntity;
-import org.activiti.engine.repository.Deployment;
-import org.activiti.engine.repository.ProcessDefinition;
-import org.activiti.engine.runtime.ProcessInstance;
-import org.activiti.engine.task.Task;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import java.util.logging.Logger;
 
 /**
  * RepositoryService: 流程仓库Service，用于管理流程仓库，例如：部署，删除，读取流程资源
@@ -242,46 +227,46 @@ public class ActivitiServiceImpl implements ActivitiService {
 
 	@Override
 	public List<Activiti> myActivitiRecord(String userName) {
-		 List<HistoricProcessInstance> hisProInstance = historyService.createHistoricProcessInstanceQuery()
-		            .processDefinitionKey(PROCESS_DEFINE_KEY).startedBy(userName).finished()
-		            .orderByProcessInstanceEndTime().desc().list();
+		List<HistoricProcessInstance> hisProInstance = historyService.createHistoricProcessInstanceQuery()
+				.processDefinitionKey(PROCESS_DEFINE_KEY).startedBy(userName).finished().orderByProcessInstanceEndTime()
+				.desc().list();
 
-		    List<Activiti> activitiList = new ArrayList<>();
-		    for (HistoricProcessInstance hisInstance : hisProInstance) {
-		        Activiti activiti = new Activiti();
-		        activiti.setApplyUser(hisInstance.getStartUserId());
-		        activiti.setApplyTime(hisInstance.getStartTime());
-		        activiti.setApplyStatus("申请结束");
-		        List<HistoricVariableInstance> varInstanceList = historyService.createHistoricVariableInstanceQuery()
-		                .processInstanceId(hisInstance.getId()).list();
-		        setVars(activiti, varInstanceList);
-		        activitiList.add(activiti);
-		    }
-		    return activitiList;
+		List<Activiti> activitiList = new ArrayList<>();
+		for (HistoricProcessInstance hisInstance : hisProInstance) {
+			Activiti activiti = new Activiti();
+			activiti.setApplyUser(hisInstance.getStartUserId());
+			activiti.setApplyTime(hisInstance.getStartTime());
+			activiti.setApplyStatus("申请结束");
+			List<HistoricVariableInstance> varInstanceList = historyService.createHistoricVariableInstanceQuery()
+					.processInstanceId(hisInstance.getId()).list();
+			setVars(activiti, varInstanceList);
+			activitiList.add(activiti);
+		}
+		return activitiList;
 	}
 
 	@Override
 	public List<Activiti> myApprovalRecord(String userName) {
-		 List<HistoricProcessInstance> hisProInstance = historyService.createHistoricProcessInstanceQuery()
-		            .processDefinitionKey(PROCESS_DEFINE_KEY).involvedUser(userName).finished()
-		            .orderByProcessInstanceEndTime().desc().list();
+		List<HistoricProcessInstance> hisProInstance = historyService.createHistoricProcessInstanceQuery()
+				.processDefinitionKey(PROCESS_DEFINE_KEY).involvedUser(userName).finished()
+				.orderByProcessInstanceEndTime().desc().list();
 
-		    List<String> auditTaskNameList = new ArrayList<>();
-		    auditTaskNameList.add("经理审批");
-		    auditTaskNameList.add("总监审批");
-		    List<Activiti> activitiList = new ArrayList<>();
-		    for (HistoricProcessInstance hisInstance : hisProInstance) {
-		
-		        Activiti activiti = new Activiti();
-		        activiti.setApplyUser(hisInstance.getStartUserId());
-		        activiti.setApplyStatus("申请结束");
-		        activiti.setApplyTime(hisInstance.getStartTime());
-		        List<HistoricVariableInstance> varInstanceList = historyService.createHistoricVariableInstanceQuery()
-		                .processInstanceId(hisInstance.getId()).list();
-		        setVars(activiti, varInstanceList);
-		        activitiList.add(activiti);
-		    }
-		    return activitiList;
+		List<String> auditTaskNameList = new ArrayList<>();
+		auditTaskNameList.add("经理审批");
+		auditTaskNameList.add("总监审批");
+		List<Activiti> activitiList = new ArrayList<>();
+		for (HistoricProcessInstance hisInstance : hisProInstance) {
+
+			Activiti activiti = new Activiti();
+			activiti.setApplyUser(hisInstance.getStartUserId());
+			activiti.setApplyStatus("申请结束");
+			activiti.setApplyTime(hisInstance.getStartTime());
+			List<HistoricVariableInstance> varInstanceList = historyService.createHistoricVariableInstanceQuery()
+					.processInstanceId(hisInstance.getId()).list();
+			setVars(activiti, varInstanceList);
+			activitiList.add(activiti);
+		}
+		return activitiList;
 	}
 
 	@Override
@@ -329,26 +314,39 @@ public class ActivitiServiceImpl implements ActivitiService {
 		}
 		return activitisList;
 	}
-	
+
 	/**
 	 * 将历史参数列表设置到实体中去
-	 * @param entity 实体
-	 * @param varInstanceList 历史参数列表
+	 * 
+	 * @param entity
+	 *            实体
+	 * @param varInstanceList
+	 *            历史参数列表
 	 */
 	public static <T> void setVars(T entity, List<HistoricVariableInstance> varInstanceList) {
-	    Class<?> tClass = entity.getClass();
-	    try {
-	        for (HistoricVariableInstance varInstance : varInstanceList) {
-	            Field field = tClass.getDeclaredField(varInstance.getVariableName());
-	            if (field == null) {
-	                continue;
-	            }
-	            field.setAccessible(true);
-	            field.set(entity, varInstance.getValue());
-	        }
-	    } catch (Exception e) {
-	        e.printStackTrace();
-	    }
-	  }
+		Class<?> tClass = entity.getClass();
+		try {
+			for (HistoricVariableInstance varInstance : varInstanceList) {
+				Field field = tClass.getDeclaredField(varInstance.getVariableName());
+				if (field == null) {
+					continue;
+				}
+				field.setAccessible(true);
+				field.set(entity, varInstance.getValue());
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * dfasdfsa
+	 * 
+	 * @Title: main
+	 * @Description: TODO
+	 * @return void
+	 */
+	public void main() {
+
 	}
 }
