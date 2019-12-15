@@ -351,5 +351,7 @@ public class ActivitiServiceImpl implements ActivitiService {
 	}
 	public void test（）{
 		System.out.println("ddsafs");
+		String name = "dfadfadsf";
+		System.out.println(name);
 	}
 }
