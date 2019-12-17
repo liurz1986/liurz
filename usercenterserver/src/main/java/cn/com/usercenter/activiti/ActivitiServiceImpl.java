@@ -371,7 +371,6 @@ public class ActivitiServiceImpl implements ActivitiService {
 		Integer h = d * 300;
 		System.out.println(h);
 		String name = "dfadfadsffdasfas";
-		name=name+“fasdfsdf”;
 		System.out.println(name);
 	}
 }
