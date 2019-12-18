@@ -4,11 +4,8 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Hashtable;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -93,9 +90,6 @@ public class UserCenterApplication extends SpringBootServletInitializer {
 	@RequestMapping(value = "/demo", method = RequestMethod.GET)
 	public Map<String, String> test() {
 		Map<String, String> params = new HashMap<String, String>();// 线程不安全的
-		Map<String, String> treeMap = new TreeMap<String, String>();// 线程安全的
-		Map<String, String> linkedMap = new LinkedHashMap<String, String>();// 继承了HashMap
-		Map<String, String> hashtable = new Hashtable<String, String>();
 		params.put("data", "welcome to you");
 		return params;
 	}
