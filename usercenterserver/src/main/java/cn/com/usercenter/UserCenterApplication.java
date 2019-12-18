@@ -91,7 +91,13 @@ public class UserCenterApplication extends SpringBootServletInitializer {
 	public Map<String, String> test() {
 		Map<String, String> params = new HashMap<String, String>();// 线程不安全的
 		params.put("data", "welcome to you");
-		params.put("data", "welcome to you----");
+		return params;
+	}
+
+	@RequestMapping(value = "/test2", method = RequestMethod.GET)
+	public Map<String, String> test2() {
+		Map<String, String> params = new HashMap<String, String>();// 线程不安全的
+		params.put("data", "welcome to you");
 		return params;
 	}
 
