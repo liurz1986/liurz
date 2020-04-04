@@ -78,11 +78,7 @@
 			<groupId>mysql</groupId>
 			<artifactId>mysql-connector-java</artifactId>
 		</dependency>
-		<!-- mongodb -->
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-data-mongodb</artifactId>
-		</dependency>
+
 		<!-- Jackson可以轻松的将Java对象转换成json对象和xml文档,同样也可以将json、xml转换成Java对象 -->
 		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>
@@ -152,27 +148,7 @@
 			<scope>true</scope>
 		</dependency>
 
-		<!-- elasticsearch启动器 (必须) -->
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-data-elasticsearch</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.elasticsearch.plugin</groupId>
-			<artifactId>transport-netty3-client</artifactId>
-			<version>5.6.10</version>
-		</dependency>
-		<dependency>
-			<groupId>org.elasticsearch.client</groupId>
-			<artifactId>transport</artifactId>
-			<version>5.6.10</version>
-		</dependency>
-		<dependency>
-			<groupId>com.sun.jna</groupId>
-			<artifactId>jna</artifactId>
-			<version>3.0.9</version>
-		</dependency>
-
+		
          <!-- activiti -->
 		<dependency>
 			<groupId>org.activiti</groupId>
@@ -185,6 +161,23 @@
 			<artifactId>activiti-bpmn-layout</artifactId>
 			<version>6.0.0.RC1</version>
 		</dependency>
+		<dependency>
+          <groupId>de.odysseus.juel</groupId>
+          <artifactId>juel</artifactId>
+          <version>2.1.3</version>
+        </dependency>
+        <!-- Swagger -->
+        <dependency>
+		    <groupId>io.springfox</groupId>
+		    <artifactId>springfox-swagger-ui</artifactId>
+		    <version>2.8.0</version>
+		</dependency>
+		<dependency>
+		    <groupId>io.springfox</groupId>
+		    <artifactId>springfox-swagger2</artifactId>
+		    <version>2.8.0</version>
+		</dependency>
+     <!-- END Swagger -->
 
 	</dependencies>
 	<!-- springcloud -->
