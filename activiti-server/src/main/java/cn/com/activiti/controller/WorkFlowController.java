@@ -1,6 +1,6 @@
 package cn.com.activiti.controller;
 
-import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.slf4j.Logger;
@@ -14,10 +14,21 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.alibaba.druid.util.StringUtils;
 
-import cn.com.activiti.entity.Activiti;
+import cn.com.activiti.entity.WorkFlowVo;
 import cn.com.activiti.service.IWorkFlowService;
+import cn.com.activiti.util.Constants;
+import cn.com.activiti.util.ResponseVo;
 import io.swagger.annotations.Api;
 
+/**
+ * 流程处理
+ * 
+ * @ClassName: WorkFlowController
+ * @Description: TODO
+ * @author lwx393577：
+ * @date 2020年4月26日 下午9:49:33
+ *
+ */
 @RestController
 @RequestMapping("workflow")
 @Api("WorkFlowController相关的api")
@@ -32,17 +43,27 @@ public class WorkFlowController {
 	 * 
 	 * @Title: startProcess
 	 * @Description: TODO
-	 * @param activiti
+	 * @param WorkFlowVo
 	 * @return
 	 * @throws Exception
 	 * @return Map<String,Object>
 	 */
 	// http://localhost:8080/activitServer/workflow/start
-	// {"processDefinitionKey":"myProcessId"}
+	// 参数：{"processDefinitionKey":"resouresApply","workFlowParams":{"approve":"liurz"}}
+	// 返回值：{"status": "success","message": null,"errorDetail": null, "items":
+	// {"processId": "22508", "taskId": "22513" }}
 	@RequestMapping(value = "/start", method = RequestMethod.POST)
-	public Map<String, Object> startProcess(@RequestBody Activiti activiti) throws Exception {
-		return workFlowService.startProcess(activiti.getProcessDefinitionKey(), activiti);
-
+	public ResponseVo startProcess(@RequestBody WorkFlowVo workFlowVo) throws Exception {
+		ResponseVo result = new ResponseVo();
+		try {
+			return workFlowService.startProcess(workFlowVo);
+		} catch (Exception e) {
+			logger.error("开启流程失败：" + e);
+			result.setErrorDetail(e.getMessage());
+			result.setMessage("开启流程失败");
+			result.setStatus(Constants.FAIL);
+			return result;
+		}
 	}
 
 	/**
@@ -55,11 +76,20 @@ public class WorkFlowController {
 	 * @return Map<String,Object>
 	 */
 	// http://localhost:8080/activitServer/workflow/complete
-	// {"taskId":"10010","pass":"ok","nextAssign":"liurz"}
+	// 参数：{"taskId":"22516","workFlowParams":{"approve":"liurz"}}
+	// 返回值：{"status":"success","message":null,"errorDetail":null,"items":{"processId":"22508","taskId":"22516"}}
 	@RequestMapping(value = "/complete", method = RequestMethod.POST)
-	public Map<String, Object> complete(@RequestBody Activiti activiti) throws Exception {
-
-		return workFlowService.complete(activiti.getTaskId(), activiti);
+	public ResponseVo complete(@RequestBody WorkFlowVo workFlowVo) throws Exception {
+		ResponseVo result = new ResponseVo();
+		try {
+			return workFlowService.complete(workFlowVo);
+		} catch (Exception e) {
+			logger.error("任务审批失败：" + e);
+			result.setErrorDetail(e.getMessage());
+			result.setMessage("任务审批失败");
+			result.setStatus(Constants.FAIL);
+			return result;
+		}
 
 	}
 
@@ -75,30 +105,32 @@ public class WorkFlowController {
 	 */
 	// http://localhost:8080/activitServer/workflow/claim
 	@RequestMapping(value = "/claim", method = RequestMethod.POST)
-	public Map<String, Object> claim(@RequestBody Activiti activiti) throws Exception {
-		Map<String, Object> resRe = new HashMap<String, Object>();
+	public ResponseVo claim(@RequestBody WorkFlowVo workFlowVo) throws Exception {
+		ResponseVo result = new ResponseVo();
 		try {
-			if (StringUtils.isEmpty(activiti.getTaskId()) || StringUtils.isEmpty(activiti.getCurrentHandler())) {
-				resRe.put("status", "fail");
-				resRe.put("message", "taskId和认领人不能为空");
+			if (StringUtils.isEmpty(workFlowVo.getTaskId()) || StringUtils.isEmpty(workFlowVo.getClaimant())) {
 				logger.info("taskId和认领人不能为空");
-				return resRe;
+				result.setMessage("taskId或认领人不能为空");
+				result.setStatus(Constants.FAIL);
+				return result;
 			}
-			logger.info("任务认领开始,taskId:" + activiti.getTaskId() + "--claim user:" + activiti.getCurrentHandler());
-			workFlowService.claim(activiti.getTaskId(), activiti.getCurrentHandler());
-			resRe.put("status", "success");
-			resRe.put("message", "任务认领成功");
+			logger.info("任务认领开始,taskId:" + workFlowVo.getTaskId() + "--claim user:" + workFlowVo.getClaimant());
+			workFlowService.claim(workFlowVo.getTaskId(), workFlowVo.getClaimant());
+			result.setMessage("任务认领成功");
+			result.setStatus(Constants.SUCCESS);
 			logger.info("任务认领成功");
+			return result;
 		} catch (Exception e) {
-			resRe.put("status", "fail");
-			resRe.put("message", "任务认领失败");
+			result.setMessage("任务认领失败");
+			result.setErrorDetail(e.getMessage());
+			result.setStatus(Constants.FAIL);
 			logger.error("任务认领失败", e);
+			return result;
 		}
-		return resRe;
 	}
 
 	/**
-	 * 任务转移：就是重新设任务处理人
+	 * 任务转移(所谓的转单)：就是重新设任务处理人
 	 * 
 	 * @Title: transferTask
 	 * @Description: TODO
@@ -108,43 +140,61 @@ public class WorkFlowController {
 	 */
 	// http://localhost:8080/activitServer/workflow/transferTask
 	@RequestMapping(value = "/transferTask", method = RequestMethod.POST)
-	public Map<String, Object> transferTask(@RequestBody Activiti activiti) {
-		Map<String, Object> resRe = new HashMap<String, Object>();
+	public ResponseVo transferTask(@RequestBody WorkFlowVo workFlowVo) {
+		ResponseVo result = new ResponseVo();
 		try {
-			if (StringUtils.isEmpty(activiti.getTaskId()) || StringUtils.isEmpty(activiti.getCurrentHandler())) {
-				resRe.put("status", "fail");
-				resRe.put("message", "taskId和认领人不能为空");
-				logger.info("taskId和认领人不能为空");
-				return resRe;
+			if (StringUtils.isEmpty(workFlowVo.getTaskId()) || StringUtils.isEmpty(workFlowVo.getAssginne())) {
+				result.setMessage("taskId或转移人不能为空");
+				result.setStatus(Constants.FAIL);
+				logger.info("taskId或转移人不能为空");
+				return result;
 			}
-			logger.info("任务转移开始,taskId:" + activiti.getTaskId() + "--transfer user:" + activiti.getCurrentHandler());
-			workFlowService.setAssignee(activiti.getTaskId(), activiti.getCurrentHandler());
-			resRe.put("status", "success");
-			resRe.put("message", "任务转移成功");
+			logger.info("任务转移开始,taskId:" + workFlowVo.getTaskId() + "--transfer user:" + workFlowVo.getAssginne());
+			workFlowService.setAssignee(workFlowVo.getTaskId(), workFlowVo.getAssginne());
+			result.setMessage("任务转移成功");
+			result.setStatus(Constants.SUCCESS);
 			logger.info("任务认领成功");
 		} catch (Exception e) {
-			resRe.put("status", "fail");
-			resRe.put("message", "任务转移失败");
+			result.setMessage("任务转移失败");
+			result.setStatus(Constants.FAIL);
+			result.setErrorDetail(e.getMessage());
 			logger.error("任务转移失败", e);
 		}
-		return resRe;
+		return result;
 	}
 
 	/**
-	 * 获取当前流程节点的处理人
+	 * 获取流程当前节点的任务信息
 	 * 
 	 * @Title: getAssignee
 	 * @Description: TODO
 	 * @param processId
 	 * @return Map<String,Object>
 	 */
-	// http://localhost:8080/activitServer/workflow/getAssignee?processId=5001
-	@RequestMapping(value = "/getAssignee", method = RequestMethod.GET)
-	public Map<String, Object> getAssignee(@RequestParam("processId") String processId) {
-		Map<String, Object> resRe = new HashMap<String, Object>();
-		resRe.put("status", "success");
-		resRe.put("assignee", workFlowService.getAssignee(processId));
-		return resRe;
+	// http://localhost:8080/activitServer/workflow/getCurrentRunTask?processId=5001
+	@RequestMapping(value = "/getCurrentRunTask", method = RequestMethod.GET)
+	public ResponseVo getCurrentRunTask(@RequestParam("processId") String processId) {
+		logger.info("---proccessId--", processId);
+		ResponseVo result = new ResponseVo();
+		try {
+			if (StringUtils.isEmpty(processId)) {
+				result.setMessage("流程id不能为空");
+				result.setStatus(Constants.FAIL);
+				logger.info("t流程id不能为空");
+				return result;
+			}
+			Map<String, Object> items = workFlowService.getCurrentRunTask(processId);
+			result.setMessage("获取流程的当前任务信息");
+			result.setStatus(Constants.SUCCESS);
+			result.setItems(items);
+			logger.info("获取流程的当前任务信息成功");
+		} catch (Exception e) {
+			result.setMessage("获取流程的当前任务信息失败");
+			result.setStatus(Constants.FAIL);
+			result.setErrorDetail(e.getMessage());
+			logger.error("获取流程的当前任务信息失败", e);
+		}
+		return result;
 	}
 
 	/**
@@ -157,29 +207,62 @@ public class WorkFlowController {
 	 */
 	// http://localhost:8080/activitServer/workflow/getTasksByAssignee?assignee=liurz
 	@RequestMapping(value = "/getTasksByAssignee", method = RequestMethod.GET)
-	public Map<String, Object> getTasksByAssignee(@RequestParam("assignee") String assignee) {
-		Map<String, Object> resRe = new HashMap<String, Object>();
-		resRe.put("status", "success");
-		resRe.put("data", workFlowService.getTasksByAssignee(assignee));
-		return resRe;
+	public ResponseVo getTasksByAssignee(@RequestParam("assignee") String assignee) {
+		logger.info("===getTasksByAssignee start,assignee {} ", assignee);
+		ResponseVo result = new ResponseVo();
+		try {
+			if (StringUtils.isEmpty(assignee)) {
+				result.setMessage("当前处理人不能为空");
+				result.setStatus(Constants.FAIL);
+				logger.info("当前处理人不能为空");
+				return result;
+			}
+			List<Map<String, String>> taskes = workFlowService.getTasksByAssignee(assignee);
+			result.setMessage("代办任务获取成功");
+			result.setStatus(Constants.SUCCESS);
+			result.setItems(taskes);
+			logger.info("代办任务获取成功");
+		} catch (Exception e) {
+			result.setMessage("代办任务获取失败");
+			result.setStatus(Constants.FAIL);
+			result.setErrorDetail(e.getMessage());
+			logger.error("代办任务获取失败", e);
+		}
+		return result;
 	}
 
 	/**
-	 * 用户的任务列表
+	 * 获取任务信息
 	 * 
-	 * @Title: myActiviti
+	 * @Title: queryTaskById
 	 * @Description: TODO
-	 * @param userName
+	 * @param taskId
 	 * @return
-	 * @return List<Activiti>
+	 * @return ResponseVo
 	 */
-	// http://localhost:8080/activitServer/workflow/myActiviti?userId=liurz
-	@RequestMapping(value = "/myActiviti", method = RequestMethod.GET)
-	public Map<String, Object> myActiviti(@RequestParam("userId") String userId) {
-		Map<String, Object> resRe = new HashMap<String, Object>();
-		resRe.put("status", "success");
-		resRe.put("data", workFlowService.myActiviti(userId));
-		return resRe;
+	@RequestMapping(value = "/queryTaskById", method = RequestMethod.GET)
+	public ResponseVo queryTaskById(@RequestParam("taskId") String taskId) {
+		logger.info("===queryTaskById start,taskId {} ", taskId);
+		ResponseVo result = new ResponseVo();
+		try {
+			if (StringUtils.isEmpty(taskId)) {
+				result.setMessage("taskId不能为空");
+				result.setStatus(Constants.FAIL);
+				logger.info("taskId不能为空");
+				return result;
+			}
+			Map<String, Object> taske = workFlowService.queryTaskById(taskId);
+			result.setMessage("获取任务信息成功");
+			result.setStatus(Constants.SUCCESS);
+			result.setItems(taske);
+			logger.info("获取任务信息成功");
+		} catch (Exception e) {
+			result.setMessage("获取任务信息失败");
+			result.setStatus(Constants.FAIL);
+			result.setErrorDetail(e.getMessage());
+			logger.error("获取任务信息失败", e);
+		}
+		return result;
 	}
 
 	/**
@@ -192,24 +275,29 @@ public class WorkFlowController {
 	 * @return Map<String,Object>
 	 */
 	// http://localhost:8080/activitServer/workflow/deleteProcess
-	// {"processId":"5001","reason":"test"}
+	// {"processId":"5001","remark":"删除原因"}
 	@RequestMapping(value = "/deleteProcess", method = RequestMethod.POST)
-	public Map<String, Object> deleteProcess(@RequestBody Activiti activiti) {
-		Map<String, Object> resRe = new HashMap<String, Object>();
-		resRe.put("status", "success");
+	public ResponseVo deleteProcess(@RequestBody WorkFlowVo workFlowVo) {
+		logger.info("===deleteProcess,processId:{} ", workFlowVo.getProcessId());
+		ResponseVo result = new ResponseVo();
 		try {
-			if (StringUtils.isEmpty(activiti.getProcessId())) {
-				resRe.put("status", "faile");
-				resRe.put("message", "流程id不能为空");
-				return resRe;
+			if (StringUtils.isEmpty(workFlowVo.getProcessId())) {
+				result.setMessage("流程Id不能为空");
+				result.setStatus(Constants.FAIL);
+				logger.info("流程Id不能为空");
+				return result;
 			}
-			workFlowService.deleteProcessInstance(activiti.getProcessId(), activiti.getReason());
+			workFlowService.deleteProcessInstance(workFlowVo.getProcessId(), workFlowVo.getRemark());
+			result.setMessage("删除流程成功");
+			result.setStatus(Constants.SUCCESS);
+			logger.info("删除流程成功");
 		} catch (Exception e) {
-			resRe.put("status", "fail");
-			resRe.put("message", "删除流程失败");
+			result.setMessage("删除流程失败");
+			result.setStatus(Constants.FAIL);
+			result.setErrorDetail(e.getMessage());
 			logger.error("删除流程失败", e);
 		}
-		return resRe;
+		return result;
 	}
 
 }

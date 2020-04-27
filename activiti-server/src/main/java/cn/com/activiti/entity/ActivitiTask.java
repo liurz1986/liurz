@@ -11,22 +11,12 @@ public class ActivitiTask {
 
 	private String taskId;
 
-	private Activiti activiti;
-
 	public String getTaskId() {
 		return taskId;
 	}
 
 	public void setTaskId(String taskId) {
 		this.taskId = taskId;
-	}
-
-	public Activiti getActiviti() {
-		return activiti;
-	}
-
-	public void setActiviti(Activiti activiti) {
-		this.activiti = activiti;
 	}
 
 	public String getId() {
