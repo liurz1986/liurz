@@ -61,7 +61,7 @@ public class WorkFlowService implements IWorkFlowService {
 		if (StringUtils.isEmpty(workFlowVo.getProcessDefinitionKey())) {
 			result.setStatus(Constants.FAIL);
 			result.setMessage("流程图的id不能为空");
-			return result;25001 25006
+			return result;
 		}
 		// 开始流程 这个是查看数据库中act_re_procdef表
 		// processDefinitionKey 是 bpmn 文件的名称,params参数，方便过程中跟踪

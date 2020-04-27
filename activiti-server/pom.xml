@@ -200,8 +200,8 @@
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
-				<!-- 设置为true热部署才能生效 -->
 				<configuration>
+					<!--fork :  如果没有该项配置，肯定devtools不会起作用，即应用不会restart -->
 					<fork>true</fork>
 				</configuration>
 			</plugin>
